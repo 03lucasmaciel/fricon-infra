@@ -1,0 +1,18 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true # [cite: 835]
+    ports:
+      - "9443:9443" # [cite: 837]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # [cite: 840]
+      - portainer_data:/data # [cite: 841]
+    environment:
+      - TZ=Europe/Lisbon # [cite: 843]
+
+volumes:
+  portainer_data:
+    driver: local

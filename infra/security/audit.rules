@@ -1,0 +1,59 @@
+# Remover todas as regras anteriores para evitar conflitos
+-D
+
+# Configuração do Buffer (ajustado para sistemas com carga moderada)
+-b 8192
+
+# Falha em modo 1 (gera log no printk, mas mantém o sistema a funcionar)
+-f 1
+
+# --- 1. IDENTIDADE E AUTENTICAÇÃO ---
+# Monitorizar alterações em utilizadores e grupos
+-w /etc/passwd -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+
+# Monitorizar privilégios sudo
+-w /etc/sudoers -p wa -k sudoers
+-w /etc/sudoers.d/ -p wa -k sudoers
+
+# --- 2. LOGINS E SESSÕES ---
+-w /var/log/lastlog -p wa -k logins
+-w /var/log/faillog -p wa -k logins
+-w /var/run/utmp -p wa -k session
+-w /var/log/wtmp -p wa -k logins
+-w /var/log/btmp -p wa -k logins
+
+# --- 3. REDE E HORA ---
+# Alterações de hostname ou domínio
+-a always,exit -F arch=b64 -S sethostname -S setdomainname -k network-change
+-w /etc/hosts -p wa -k network-change
+-w /etc/network/ -p wa -k network-change
+
+# Alterações de data/hora do sistema
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change
+-w /etc/localtime -p wa -k time-change
+
+# --- 4. HARDENING DO KERNEL ---
+# Monitorizar inserção e remoção de módulos do kernel
+-w /sbin/insmod -p x -k modules
+-w /sbin/rmmod -p x -k modules
+-w /sbin/modprobe -p x -k modules
+-a always,exit -F arch=b64 -S init_module -S delete_module -k modules
+
+# --- 5. ESPECÍFICO FRICON: DOCKER ---
+# Monitorizar o binário e diretórios de dados/configuração do Docker [cite: 563]
+-w /usr/bin/docker -p wa -k docker
+-w /var/lib/docker/ -p wa -k docker
+-w /etc/docker/ -p wa -k docker
+-w /etc/ssh/sshd_config -p wa -k sshd
+
+# --- 6. INTEGRIDADE DO SISTEMA ---
+# Monitorizar modificação de binários críticos
+-w /bin/ -p wa -k binaries
+-w /sbin/ -p wa -k binaries
+-w /usr/bin/ -p wa -k binaries
+
+# Tornar a configuração imutável (requer reboot para alterar as regras)
+-e 2
